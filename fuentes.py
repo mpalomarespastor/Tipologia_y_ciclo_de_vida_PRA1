@@ -5,17 +5,55 @@ import csv
 import regex
 import re
 import time
+import webtech
+import whois
+from urllib.request import urlopen
 
+# Evaluaci√≥n inicial
+#############
+# Tecnolog√≠a utilizada por el sitio web
+wt = webtech.WebTech(options={'json': True})
 
-cabeceras =['url','Nombre', 'Otros_nombres', 'Pedania', 'Municipio', 'Provincia', 'CoordX','CoordY', 'Cuenca', 'Subcuenca', 'Rio', 'Masa_agua', 'ENP', 'Lugar', 'Naturaleza','Tipo', 'Descripcion', 'Instalaciones_asociadas', 'Caudal', 'Se_agota', 'Uso_agua', 'Acceso', 'Uso_publico','valoracion_acceso','Conservacion', 'Amenazas', 'Descripcion_hidrogeolÛgica','Descripcion_arquitectonica',  'Antecedentes_historicos', 'Aspectos_culturales', ' Otra_informacion', 'Cientifico', 'Minero', 'Paisajistico', 'Otros', 'Medioambiental', 'Recreativo', 'Historico', 'Arquitectonico', 'Economico', 'Arraigo', 'Valoracion', 'Autor', 'Fecha']
+try:
+    report = wt.start_from_url('http://www.conocetusfuentes.com')
+    print(report['tech'])
+except wt.utils.ConnectionException:
+    print("Connection error")
+
+# Propietario
+w = whois.whois('http://www.conocetusfuentes.com')
+print(w.org)
+##############
+
+# Extracci√≥n de la √∫ltima p√°gina a√±adida
+html = urlopen("http://www.conocetusfuentes.com/ultimas_fuentes.html")
+bsObj = BeautifulSoup(html,"html.parser")
+html_link = bsObj.find("div", {"class": "ultimas_fuentes"})
+
+# Buscamos la url del √∫ltimo elemento y extraemos el id
+try:
+    for a in html_link.find_all('a', {'href': re.compile(r'datos_fuente.*[.html]$')}):
+        ultimo_elemento = int(
+            re.search(r'datos_fuente_(.*?).html', str(a)).group(1))
+        print("Encontrada la URL del ultimo elemento:", a['href'])
+except:
+    print("No se ha encontrado la URL, asignamos un valor al id")
+    ultimo_elemento = 13500
+
+cabeceras = ['url', 'Nombre', 'Otros_nombres', 'Pedania', 'Municipio', 'Provincia', 'CoordX', 'CoordY', 'Cuenca', 'Subcuenca', 'Rio', 'Masa_agua', 'ENP', 'Lugar', 'Naturaleza', 'Tipo', 'Descripcion', 'Instalaciones_asociadas', 'Caudal', 'Se_agota', 'Uso_agua', 'Acceso', 'Uso_publico', 'valoracion_acceso', 'Conservacion',
+             'Amenazas', 'Descripcion_hidrogeolÔøΩgica', 'Descripcion_arquitectonica',  'Antecedentes_historicos', 'Aspectos_culturales', ' Otra_informacion', 'Cientifico', 'Minero', 'Paisajistico', 'Otros', 'Medioambiental', 'Recreativo', 'Historico', 'Arquitectonico', 'Economico', 'Arraigo', 'Valoracion', 'Autor', 'Fecha', 'Imagenes']
 with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") as csvfile:
     writer = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_NONE, escapechar="\\")
     writer.writerow(cabeceras)
-    for i in range(1, 13500):
+    for i in range(1, ultimo_elemento):
         url = "http://www.conocetusfuentes.com/datos_fuente_" + str(i) + ".html"
 
-        # Realizamos la petici√≥n a la we#b
-        req = requests.get(url)
+        # Modificaci√≥n cabecera HTTP para parecer humano
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36",
+                   "Accept": "text/html,application/xhtml+xml,application/xml; q=0.9,image/webp,*/*;q=0.8"}
+        # Realizamos la petici√≥n a la web
+        req = requests.get(url, headers=headers)
+
 
         # Comprobamos que la petici√≥n nos devuelve un Status Code = 200
         status_code = req.status_code
@@ -37,7 +75,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
             diccionario = {'\u012d': '', '\u200b': '', '\u0144': '', '\u201d': '', '\u012c': '', '\u1d52': '', '\u03bc':'', '\u2a5d': '', '\u2282': '', '\xa0': '', '\r\n': ' ', '\n': ' ','\t': '', '\r': '', '<br/>': ' ', ";" : "-"}
             regex = re.compile("(%s)" % "|".join(map(re.escape, diccionario.keys())))
             
-            if ("LocalizaciÛn" in titulo_h4): 
+            if ("LocalizaciÔøΩn" in titulo_h4): 
                 indice_titulos = indice_titulos+1
                 nombre = valoresDiv[0].getText().strip()
                 nombre = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), nombre)
@@ -109,7 +147,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
             output_rows.append(masa_agua)
             output_rows.append(ENP)    
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Procedencia del agua subterr·nea" in titulo_h4):
+            if ("Procedencia del agua subterrÔøΩnea" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 lugar =  valoresDiv[i].getText().strip()
                 lugar = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), lugar)
@@ -133,7 +171,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 tipo = ''
             output_rows.append(tipo)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ((titulo_h4.find("DescripciÛn"))!=-1):
+            if ((titulo_h4.find("DescripciÔøΩn"))!=-1):
                 indice_titulos = indice_titulos+1
                 descripcion =  valoresSpan[j].getText().strip()
                 descripcion = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), descripcion)
@@ -175,7 +213,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 uso_agua = ''
             output_rows.append(uso_agua)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Acceso y uso p˙blico actual" in titulo_h4):
+            if ("Acceso y uso pÔøΩblico actual" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 acceso =  valoresSpan[j].getText().strip()
                 acceso = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), acceso)
@@ -195,7 +233,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
             output_rows.append(valoracion_acceso)
               
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Estado de conservaciÛn" in titulo_h4):
+            if ("Estado de conservaciÔøΩn" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 estado_conservacion =  valoresSpan[j].getText().strip()
                 estado_conservacion = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), estado_conservacion)
@@ -213,7 +251,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 amenazas = ''
             output_rows.append(amenazas)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("DescripciÛn hidrogeolÛgica" in titulo_h4):
+            if ("DescripciÔøΩn hidrogeolÔøΩgica" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 descripcion_hidrogeologica =  valoresSpan[j].getText().strip()
                 descripcion_hidrogeologica = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), descripcion_hidrogeologica)
@@ -222,7 +260,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 descripcion_hidrogeologica = ''
             output_rows.append(descripcion_hidrogeologica)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("DescripciÛn arquitectÛnica" in titulo_h4):
+            if ("DescripciÔøΩn arquitectÔøΩnica" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 descripcion_arquitectonica =  valoresSpan[j].getText().strip()
                 descripcion_arquitectonica = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), descripcion_arquitectonica)
@@ -231,7 +269,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 descripcion_arquitectonica = ''
             output_rows.append(descripcion_arquitectonica)            
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Antecedentes histÛricos" in titulo_h4):
+            if ("Antecedentes histÔøΩricos" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 antecedentes_historicos =  valoresSpan[j].getText().strip()
                 antecedentes_historicos = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), antecedentes_historicos)
@@ -240,7 +278,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 antecedentes_historicos = ''
             output_rows.append(antecedentes_historicos)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Aspectos culturales y etnogr·ficos" in titulo_h4):
+            if ("Aspectos culturales y etnogrÔøΩficos" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 aspectos_culturales =  valoresSpan[j].getText().strip()
                 aspectos_culturales = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), aspectos_culturales)
@@ -249,7 +287,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 aspectos_culturales = ''
             output_rows.append(aspectos_culturales)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("Otra informaciÛn" in titulo_h4):
+            if ("Otra informaciÔøΩn" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 otra_informacion =  valoresSpan[j].getText().strip()
                 otra_informacion = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), otra_informacion)
@@ -313,7 +351,7 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
             output_rows.append(economico)
             output_rows.append(arraigo)
             titulo_h4 = columna_1.findChildren(['h4'])[indice_titulos]
-            if ("ValoraciÛn general" in titulo_h4):
+            if ("ValoraciÔøΩn general" in titulo_h4):
                 indice_titulos = indice_titulos+1
                 valoracion_general =  valoresSpan[j].getText().strip()
                 valoracion_general = regex.sub(lambda x: str(diccionario[x.string[x.start() :x.end()]]), valoracion_general)
@@ -335,8 +373,18 @@ with open('conocetusfuentes_04_22.csv',  'a',newline='',encoding="ISO-8859-1") a
                 fecha = ''
             output_rows.append(autor)
             output_rows.append(fecha)
+
+            # A√±adimos todas las url de im√°genes, ya sean de la fuente o de la ubicaci√≥n
+            images = []
+            for img in html.find_all("img", {'src': re.compile(r'fuente.*[.jpg]$|ubicacion.*[.jpg]$')}):
+                images.append(img.attrs.get("src"))
+                
+            images_str = ','.join(images)  
+            output_rows.append(images_str)
+
             print(output_rows)
             if (len(nombre)>0):
                 writer.writerow(output_rows)
-            time.sleep(1)        
-            
+            time.sleep(1)     
+
+
