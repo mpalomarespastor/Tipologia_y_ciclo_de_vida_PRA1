@@ -10,7 +10,7 @@ Macarena Palomares Pastor
 # ESTRUCTURA:
 *  Código: Directorio con el fichero fuentes.py que contiene el código utilizado
 *  CSV: Directorio con el CSV generado al ejecutar el código python
-*  PDF: Directrio con el PDF de la memoria del proyecto
+*  PDF: Directorio con el PDF de la memoria del proyecto
 
 # ZENODO: 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6425641.svg)](https://doi.org/10.5281/zenodo.6425641)
