@@ -8,7 +8,7 @@ Pablo Moreno Martínez,
 Macarena Palomares Pastor
 
 # ESTRUCTURA:
-*  CODE: Directorio con el fichero fuentes.py que contiene el código utilizado
+*  Código: Directorio con el fichero fuentes.py que contiene el código utilizado
 *  CSV: Directorio con el CSV generado al ejecutar el código python
 *  PDF: Directrio con el PDF de la memoria del proyecto
 
