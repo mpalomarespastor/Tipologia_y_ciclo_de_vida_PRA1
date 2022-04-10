@@ -1,11 +1,11 @@
 # conocetusfuentes_04_22
 ***
 #  AUTORES:
-Pablo Moreno Marín
+Pablo Moreno Marín, 
 Macarena Palomares Pastor
 
 # ESTRUCTURA:
-*  cODE: Directorio con el fichero fuentes.py que contiene el código ejecutable
+*  cODE: Directorio con el fichero fuentes.py que contiene el c
 *  CSV: Directorio con el CSV generado al ejecutar el código python
 *  PDF: Directrio con el PDF de la memor del proyecto
 
